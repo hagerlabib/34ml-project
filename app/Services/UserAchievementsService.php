@@ -25,16 +25,19 @@ class UserAchievementsService
         $this->lessonsCount = $user->watches()->count();
         $this->commentsCount = $user->comments()->count();
 
-        $achievement = $this->getAchievements('>')->pluck('title');
+        $achievements = $this->getAchievements('>')->pluck('title');
 
-        if (mb_stripos($achievement[$index], AchievementTypeEnum::Comment->value)) {
-            $nextOne[] = $achievement[0];
-            $nextOne[] = $achievement[$index];
-        } else {
-            $nextOne = $this->nextAvailableAchievements($user, $index + 1, $nextOne);
+        if (isset($achievements[$index])) {
+            foreach (AchievementTypeEnum::values() as $achievementType) {
+                if (!in_array($achievementType, array_keys($nextOne)) && mb_stripos($achievements[$index], $achievementType)) {
+                    $nextOne[$achievementType] = $achievements[$index];
+                }
+            }
+
+            return $this->nextAvailableAchievements($user, $index + 1, $nextOne);
         }
 
-        return $nextOne;
+        return array_values($nextOne);
     }
 
     private function getAchievements(string $operator): Collection
